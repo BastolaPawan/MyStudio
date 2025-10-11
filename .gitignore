@@ -482,3 +482,9 @@ $RECYCLE.BIN/
 
 # Vim temporary swap files
 *.swp
+
+# Ignore .NET 8.0 Debug build output
+obj/Debug/net8.0/
+
+# ignore vs
+.vs/
