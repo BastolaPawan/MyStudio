@@ -488,3 +488,5 @@ obj/Debug/net8.0/
 
 # ignore vs
 .vs/
+
+**/obj/
