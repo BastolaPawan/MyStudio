@@ -1,0 +1,69 @@
+﻿@model MyStudio.Controllers.InterestRateUpdateModel
+
+@{
+    ViewData["Title"] = "Update Interest Rate";
+}
+
+<div class="container">
+    <h1>Update Interest Rate</h1>
+
+    <div class="row">
+        <div class="col-md-6">
+            <form asp-action="UpdateInterestRate">
+                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+                <div class="card">
+                    <div class="card-body">
+                        <div class="alert alert-info">
+                            <strong>Loan Account:</strong> @ViewBag.LoanAccountNumber<br>
+                            <strong>Current Rate:</strong> @ViewBag.CurrentInterestRate%
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label asp-for="NewInterestRate" class="form-label"></label>
+                            <input asp-for="NewInterestRate" class="form-control" />
+                            <span asp-validation-for="NewInterestRate" class="text-danger"></span>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label asp-for="EffectiveFrom" class="form-label"></label>
+                            <input asp-for="EffectiveFrom" type="date" class="form-control"
+                                   value="@ViewBag.DefaultEffectiveFrom" />
+                            <span asp-validation-for="EffectiveFrom" class="text-danger"></span>
+                            <small class="form-text text-muted">Auto-filled with next due date. Change only if needed.</small>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label asp-for="ReasonForChange" class="form-label"></label>
+                            <textarea asp-for="ReasonForChange" class="form-control" rows="3"></textarea>
+                            <span asp-validation-for="ReasonForChange" class="text-danger"></span>
+                        </div>
+
+                        <div class="form-group mt-4">
+                            <button type="submit" class="btn btn-warning">Update Interest Rate</button>
+                            <a asp-action="Details" asp-route-id="@ViewContext.RouteData.Values["id"]" class="btn btn-secondary">Cancel</a>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Ensure Effective From is populated even if ViewBag doesn't work
+            var effectiveFromField = document.querySelector('[name="EffectiveFrom"]');
+            if (!effectiveFromField.value) {
+                // Set to today's date as fallback
+                var today = new Date().toISOString().split('T')[0];
+                effectiveFromField.value = today;
+            }
+        });
+    </script>
+}

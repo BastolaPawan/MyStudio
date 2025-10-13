@@ -1,0 +1,54 @@
+﻿@model MyStudio.Models.Loan
+
+@{
+    ViewData["Title"] = "Edit Loan";
+}
+
+<div class="container">
+    <h1>Edit Loan</h1>
+
+    <div class="row">
+        <div class="col-md-6">
+            <form asp-action="Edit">
+                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                <input type="hidden" asp-for="LoanId" />
+
+                <div class="card">
+                    <div class="card-body">
+                        <div class="form-group mb-3">
+                            <label asp-for="LoanAccountNumber" class="form-label"></label>
+                            <input asp-for="LoanAccountNumber" class="form-control" readonly />
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label asp-for="LoanType" class="form-label"></label>
+                            <input asp-for="LoanType" class="form-control" />
+                            <span asp-validation-for="LoanType" class="text-danger"></span>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label asp-for="LoanStatus" class="form-label"></label>
+                            <select asp-for="LoanStatus" class="form-control">
+                                <option value="Active">Active</option>
+                                <option value="Closed">Closed</option>
+                                <option value="Overdue">Overdue</option>
+                            </select>
+                            <span asp-validation-for="LoanStatus" class="text-danger"></span>
+                        </div>
+
+                        <div class="form-group mt-4">
+                            <button type="submit" class="btn btn-primary">Save Changes</button>
+                            <a asp-action="Details" asp-route-id="@Model.LoanId" class="btn btn-secondary">Cancel</a>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

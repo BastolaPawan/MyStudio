@@ -1,0 +1,114 @@
+﻿@model MyStudio.Controllers.PaymentModel
+
+@{
+    ViewData["Title"] = "Make Payment";
+}
+
+<div class="container">
+    <h1>Make Payment</h1>
+
+    <div class="row">
+        <div class="col-md-6">
+            <form asp-action="MakePayment">
+                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+                <div class="card">
+                    <div class="card-body">
+                        <div class="alert alert-info">
+                            <strong>Loan Account:</strong> @Model.LoanAccountNumber<br>
+                            <strong>Installment #:</strong> @Model.DueInstallmentNumber<br>
+                            <strong>Due Date:</strong> @Model.DueDate.ToString("MMM dd, yyyy")
+                        </div>
+
+                        <input type="hidden" asp-for="LoanId" />
+                        <input type="hidden" asp-for="LoanAccountNumber" />
+                        <input type="hidden" asp-for="DueInstallmentNumber" />
+                        <input type="hidden" asp-for="DueDate" />
+
+                        <!-- Payment Date (Auto-filled with Due Date) -->
+                        <div class="form-group mb-3">
+                            <label asp-for="PaymentDate" class="form-label"></label>
+                            <input asp-for="PaymentDate" type="date" class="form-control" />
+                            <span asp-validation-for="PaymentDate" class="text-danger"></span>
+                            <small class="form-text text-muted">Auto-filled with due date. You can change if needed.</small>
+                        </div>
+
+                        <!-- Amount -->
+                        <div class="form-group mb-3">
+                            <label asp-for="Amount" class="form-label"></label>
+                            <input asp-for="Amount" class="form-control" />
+                            <span asp-validation-for="Amount" class="text-danger"></span>
+                        </div>
+
+                        <!-- Payment Method -->
+                        <div class="form-group mb-3">
+                            <label asp-for="PaymentMethod" class="form-label"></label>
+                            <select asp-for="PaymentMethod" class="form-control">
+                                <option value="">Select Payment Method</option>
+                                <option value="Bank Transfer">Bank Transfer</option>
+                                <option value="Cash">Cash</option>
+                                <option value="Cheque">Cheque</option>
+                                <option value="Online Payment">Online Payment</option>
+                                <option value="UPI">UPI</option>
+                                <option value="Debit Card">Debit Card</option>
+                                <option value="Credit Card">Credit Card</option>
+                            </select>
+                            <span asp-validation-for="PaymentMethod" class="text-danger"></span>
+                        </div>
+
+                        <!-- Reference Number -->
+                        <div class="form-group mb-3">
+                            <label asp-for="ReferenceNumber" class="form-label"></label>
+                            <input asp-for="ReferenceNumber" class="form-control" placeholder="Transaction ID/Reference" />
+                            <span asp-validation-for="ReferenceNumber" class="text-danger"></span>
+                        </div>
+
+                        <!-- Remarks -->
+                        <div class="form-group mb-3">
+                            <label asp-for="Remarks" class="form-label"></label>
+                            <textarea asp-for="Remarks" class="form-control" rows="2" placeholder="Any additional notes..."></textarea>
+                            <span asp-validation-for="Remarks" class="text-danger"></span>
+                        </div>
+
+                        <div class="form-group mt-4">
+                            <button type="submit" class="btn btn-success">Process Payment</button>
+                            <a asp-action="Details" asp-route-id="@Model.LoanId" class="btn btn-secondary">Cancel</a>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h6>Payment Information</h6>
+                </div>
+                <div class="card-body">
+                    <dl>
+                        <dt>Installment Number:</dt>
+                        <dd>@Model.DueInstallmentNumber</dd>
+
+                        <dt>Due Date:</dt>
+                        <dd>@Model.DueDate.ToString("MMM dd, yyyy")</dd>
+
+                        <dt>EMI Amount:</dt>
+                        <dd>@Model.Amount.ToString("C")</dd>
+                    </dl>
+                    <div class="alert alert-warning">
+                        <small>
+                            <strong>Note:</strong> Payment date is automatically set to the due date.
+                            You can change it if you're making an early or late payment.
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}
