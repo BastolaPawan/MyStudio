@@ -1,0 +1,159 @@
+﻿@model MyStudio.Models.Item
+@{
+    ViewData["Title"] = "Item Details";
+}
+
+<div class="container">
+    <div class="row mb-4">
+        <div class="col">
+            <h1>Item Details</h1>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a asp-action="Index">Inventory</a></li>
+                    <li class="breadcrumb-item"><a asp-action="Items">Items</a></li>
+                    <li class="breadcrumb-item active">@Model.Name</li>
+                </ol>
+            </nav>
+        </div>
+        <div class="col-auto">
+            <a asp-action="Items" class="btn btn-outline-secondary">Back to Items</a>
+            <a asp-controller="Purchase" asp-action="Create" class="btn btn-success">Purchase This Item</a>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Item Information -->
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Item Information</h5>
+                </div>
+                <div class="card-body">
+                    <dl class="row">
+                        <dt class="col-sm-4">SKU:</dt>
+                        <dd class="col-sm-8"><strong>@Model.SKU</strong></dd>
+
+                        <dt class="col-sm-4">Name:</dt>
+                        <dd class="col-sm-8">@Model.Name</dd>
+
+                        <dt class="col-sm-4">Brand:</dt>
+                        <dd class="col-sm-8">@Model.Brand</dd>
+
+                        <dt class="col-sm-4">Model:</dt>
+                        <dd class="col-sm-8">@Model.Model</dd>
+
+                        <dt class="col-sm-4">Description:</dt>
+                        <dd class="col-sm-8">@(string.IsNullOrEmpty(Model.Description) ? "N/A" : Model.Description)</dd>
+
+                        <dt class="col-sm-4">Unit:</dt>
+                        <dd class="col-sm-8">@Model.Unit?.Name</dd>
+
+                        <dt class="col-sm-4">Group:</dt>
+                        <dd class="col-sm-8">@Model.ItemGroup?.Name</dd>
+
+                        <dt class="col-sm-4">Sub Group:</dt>
+                        <dd class="col-sm-8">@(Model.ItemSubGroup?.Name ?? "N/A")</dd>
+                    </dl>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stock Information -->
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Stock Information</h5>
+                </div>
+                <div class="card-body">
+                    <dl class="row">
+                        <dt class="col-sm-6">Current Stock:</dt>
+                        <dd class="col-sm-6">
+                            <span class="badge bg-@(Model.CurrentStock == 0 ? "danger" : Model.CurrentStock <= Model.ReorderLevel ? "warning" : "success") fs-6">
+                                @Model.CurrentStock
+                            </span>
+                        </dd>
+
+                        <dt class="col-sm-6">Minimum Stock:</dt>
+                        <dd class="col-sm-6">@Model.MinimumStock</dd>
+
+                        <dt class="col-sm-6">Maximum Stock:</dt>
+                        <dd class="col-sm-6">@Model.MaximumStock</dd>
+
+                        <dt class="col-sm-6">Reorder Level:</dt>
+                        <dd class="col-sm-6">@Model.ReorderLevel</dd>
+
+                        <dt class="col-sm-6">Status:</dt>
+                        <dd class="col-sm-6">
+                            @if (Model.CurrentStock == 0)
+                            {
+                                <span class="badge bg-danger">Out of Stock</span>
+                            }
+                            else if (Model.CurrentStock <= Model.ReorderLevel)
+                            {
+                                <span class="badge bg-warning">Low Stock</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-success">In Stock</span>
+                            }
+                        </dd>
+
+                        <dt class="col-sm-6">Created Date:</dt>
+                        <dd class="col-sm-6">@Model.CreatedDate.ToString("MMM dd, yyyy")</dd>
+                    </dl>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stock Movement History -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Stock Movement History</h5>
+                </div>
+                <div class="card-body">
+                    @if (Model.StockMovements.Any())
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Type</th>
+                                        <th>Quantity</th>
+                                        <th>Unit Cost</th>
+                                        <th>Reference</th>
+                                        <th>Notes</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var movement in Model.StockMovements.OrderByDescending(sm => sm.MovementDate))
+                                    {
+                                        <tr>
+                                            <td>@movement.MovementDate.ToString("MMM dd, yyyy")</td>
+                                            <td>
+                                                <span class="badge bg-@(movement.Quantity > 0 ? "success" : "danger")">
+                                                    @movement.MovementType
+                                                </span>
+                                            </td>
+                                            <td>@movement.Quantity</td>
+                                            <td>@movement.UnitCost.ToString("C")</td>
+                                            <td>@movement.Reference</td>
+                                            <td>@movement.Notes</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <p class="text-muted">No stock movement history available.</p>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

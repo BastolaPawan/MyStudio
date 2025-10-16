@@ -1,0 +1,81 @@
+﻿@model List<MyStudio.Models.Purchase>
+@{
+    ViewData["Title"] = "Purchase Orders";
+}
+
+<div class="container">
+    <div class="row mb-4">
+        <div class="col">
+            <h1>Purchase Orders</h1>
+            <p class="lead">Manage your purchase orders and receipts</p>
+        </div>
+        <div class="col-auto">
+            <a asp-action="Create" class="btn btn-success">New Purchase Order</a>
+        </div>
+    </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <div class="card">
+        <div class="card-body">
+            @if (Model.Any())
+            {
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Purchase #</th>
+                                <th>Vendor</th>
+                                <th>Date</th>
+                                <th>Items</th>
+                                <th>Total Amount</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var purchase in Model)
+                            {
+                                <tr>
+                                    <td><strong>@purchase.PurchaseNumber</strong></td>
+                                    <td>@purchase.Vendor.Name</td>
+                                    <td>@purchase.PurchaseDate.ToString("MMM dd, yyyy")</td>
+                                    <td>@purchase.PurchaseItems.Count items</td>
+                                    <td>@purchase.TotalAmount.ToString("C")</td>
+                                    <td>
+                                        <span class="badge bg-@(purchase.Status == "Received" ? "success" : purchase.Status == "Ordered" ? "warning" : "secondary")">
+                                            @purchase.Status
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <a asp-action="Details" asp-route-id="@purchase.Id"
+                                           class="btn btn-sm btn-outline-primary">View</a>
+                                        @if (purchase.Status != "Received")
+                                        {
+                                            <a asp-action="Receive" asp-route-id="@purchase.Id"
+                                               class="btn btn-sm btn-outline-success">Receive</a>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <div class="text-center py-4">
+                    <h4 class="text-muted">No purchase orders found</h4>
+                    <p class="text-muted">Create your first purchase order to start managing inventory.</p>
+                    <a asp-action="Create" class="btn btn-primary">Create First Purchase Order</a>
+                </div>
+            }
+        </div>
+    </div>
+</div>

@@ -1,0 +1,199 @@
+﻿@model MyStudio.Models.InventoryReportViewModel
+@{
+    ViewData["Title"] = "Inventory Dashboard";
+}
+
+<div class="container">
+    <div class="row mb-4">
+        <div class="col">
+            <h1>Inventory Dashboard</h1>
+            <p class="lead">Overview of your photo studio inventory</p>
+        </div>
+        <div class="col-auto">
+            <a asp-action="CreateItem" class="btn btn-success">Add New Item</a>
+            <a asp-action="Items" class="btn btn-outline-primary">View All Items</a>
+        </div>
+    </div>
+
+    <!-- Alert Messages -->
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <!-- Low Stock Alert -->
+    @if (Model.LowStockItems.Any())
+    {
+        <div class="alert alert-warning">
+            <h5>⚠ Low Stock Alert</h5>
+            <p>The following items are below reorder level:</p>
+            <ul>
+                @foreach (var item in Model.LowStockItems)
+                {
+                    <li>@item.Name - Current Stock: @item.CurrentStock</li>
+                }
+            </ul>
+        </div>
+    }
+
+    <div class="row">
+        <!-- Quick Stats -->
+        <div class="col-md-3 mb-4">
+            <div class="card text-white bg-primary">
+                <div class="card-body">
+                    <h5 class="card-title">Total Items</h5>
+                    <h2 class="card-text">@Model.Items.Count</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-4">
+            <div class="card text-white bg-warning">
+                <div class="card-body">
+                    <h5 class="card-title">Low Stock</h5>
+                    <h2 class="card-text">@Model.LowStockItems.Count</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-4">
+            <div class="card text-white bg-info">
+                <div class="card-body">
+                    <h5 class="card-title">Recent Purchases</h5>
+                    <h2 class="card-text">@Model.RecentPurchases.Count</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-4">
+            <div class="card text-white bg-success">
+                <div class="card-body">
+                    <h5 class="card-title">Actions</h5>
+                    <div>
+                        <a asp-controller="Purchase" asp-action="Create" class="btn btn-light btn-sm">New Purchase</a>
+                        <a asp-action="ItemGroups" class="btn btn-light btn-sm mt-1">Manage Groups</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Purchases -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Recent Purchases</h5>
+                </div>
+                <div class="card-body">
+                    @if (Model.RecentPurchases.Any())
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Purchase #</th>
+                                        <th>Vendor</th>
+                                        <th>Date</th>
+                                        <th>Amount</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var purchase in Model.RecentPurchases)
+                                    {
+                                        <tr>
+                                            <td>@purchase.PurchaseNumber</td>
+                                            <td>@purchase.Vendor.Name</td>
+                                            <td>@purchase.PurchaseDate.ToString("MMM dd, yyyy")</td>
+                                            <td>@purchase.TotalAmount.ToString("C")</td>
+                                            <td>
+                                                <span class="badge bg-@(purchase.Status == "Received" ? "success" : "warning")">
+                                                    @purchase.Status
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <a asp-controller="Purchase" asp-action="Details" asp-route-id="@purchase.Id"
+                                                   class="btn btn-sm btn-outline-primary">View</a>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <p class="text-muted">No recent purchases found.</p>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Low Stock Items -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Low Stock Items</h5>
+                </div>
+                <div class="card-body">
+                    @if (Model.LowStockItems.Any())
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>SKU</th>
+                                        <th>Item Name</th>
+                                        <th>Current Stock</th>
+                                        <th>Reorder Level</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var item in Model.LowStockItems)
+                                    {
+                                        <tr>
+                                            <td>@item.SKU</td>
+                                            <td>@item.Name</td>
+                                            <td>
+                                                <span class="badge bg-@(item.CurrentStock == 0 ? "danger" : "warning")">
+                                                    @item.CurrentStock
+                                                </span>
+                                            </td>
+                                            <td>@item.ReorderLevel</td>
+                                            <td>
+                                                @if (item.CurrentStock == 0)
+                                                {
+                                                    <span class="badge bg-danger">Out of Stock</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="badge bg-warning">Low Stock</span>
+                                                }
+                                            </td>
+                                            <td>
+                                                <a asp-action="ItemDetails" asp-route-id="@item.Id"
+                                                   class="btn btn-sm btn-outline-info">Details</a>
+                                                <a asp-controller="Purchase" asp-action="Create"
+                                                   class="btn btn-sm btn-outline-success">Purchase</a>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <p class="text-muted">All items are sufficiently stocked. Great job! ✅</p>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

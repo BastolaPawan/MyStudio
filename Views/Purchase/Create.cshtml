@@ -1,0 +1,250 @@
+﻿@model MyStudio.Models.CreatePurchaseViewModel
+@{
+    ViewData["Title"] = "Create Purchase Order";
+}
+
+<div class="container">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="mb-0">Create New Purchase Order</h4>
+                </div>
+                <div class="card-body">
+                    <form asp-action="Create" method="post" id="purchaseForm">
+                        @Html.AntiForgeryToken()
+
+                        <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+
+                        <!-- Purchase Header -->
+                        <div class="row mb-4">
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label asp-for="VendorId" class="form-label">Vendor *</label>
+                                    <select asp-for="VendorId" class="form-select" required
+                                            asp-items="@(new SelectList(Model.Vendors, "Id", "Name"))">
+                                        <option value="">-- Select Vendor --</option>
+                                    </select>
+                                    <span asp-validation-for="VendorId" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label asp-for="PurchaseDate" class="form-label">Purchase Date *</label>
+                                    <input asp-for="PurchaseDate" class="form-control" type="date" required />
+                                    <span asp-validation-for="PurchaseDate" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label asp-for="DeliveryDate" class="form-label">Expected Delivery</label>
+                                    <input asp-for="DeliveryDate" class="form-control" type="date" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Financial Settings -->
+                        <div class="row mb-4">
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label asp-for="TaxPercent" class="form-label">Tax Percentage</label>
+                                    <input asp-for="TaxPercent" class="form-control" type="number" step="0.01" value="13" />
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label asp-for="ShippingCost" class="form-label">Shipping Cost</label>
+                                    <input asp-for="ShippingCost" class="form-control" type="number" step="0.01" value="0" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Purchase Items -->
+                        <div class="mb-4">
+                            <h5>Purchase Items</h5>
+                            <div id="items-container">
+                                @for (int i = 0; i < Model.Items.Count; i++)
+                                {
+                                    <div class="item-row border p-3 mb-3">
+                                        <div class="row">
+                                            <div class="col-md-4">
+                                                <div class="form-group">
+                                                    <label class="form-label">Item *</label>
+                                                    <select name="Items[@i].ItemId" class="form-select item-select" required
+                                                            asp-items="@(new SelectList(Model.AvailableItems, "Id", "Name"))">
+                                                        <option value="">-- Select Item --</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-2">
+                                                <div class="form-group">
+                                                    <label class="form-label">Quantity *</label>
+                                                    <input name="Items[@i].Quantity" class="form-control quantity" type="number" min="1" value="1" required />
+                                                </div>
+                                            </div>
+                                            <div class="col-md-2">
+                                                <div class="form-group">
+                                                    <label class="form-label">Unit Price *</label>
+                                                    <input name="Items[@i].UnitPrice" class="form-control unit-price" type="number" step="0.01" min="0" required />
+                                                </div>
+                                            </div>
+                                            <div class="col-md-2">
+                                                <div class="form-group">
+                                                    <label class="form-label">Discount %</label>
+                                                    <input name="Items[@i].DiscountPercent" class="form-control discount" type="number" step="0.01" min="0" max="100" value="0" />
+                                                </div>
+                                            </div>
+                                            <div class="col-md-2">
+                                                <div class="form-group">
+                                                    <label class="form-label">&nbsp;</label>
+                                                    <button type="button" class="btn btn-danger btn-sm remove-item" style="display: block;">Remove</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+
+                            <button type="button" id="add-item" class="btn btn-outline-primary">Add Another Item</button>
+                        </div>
+
+                        <!-- Notes -->
+                        <div class="form-group mb-4">
+                            <label asp-for="Notes" class="form-label">Notes</label>
+                            <textarea asp-for="Notes" class="form-control" rows="3" placeholder="Any additional notes..."></textarea>
+                        </div>
+
+                        <!-- Summary -->
+                        <div class="card bg-light">
+                            <div class="card-body">
+                                <h6>Order Summary</h6>
+                                <div class="row">
+                                    <div class="col-md-3">
+                                        <strong>Subtotal:</strong> <span id="subtotal">$0.00</span>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <strong>Tax:</strong> <span id="tax-amount">$0.00</span>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <strong>Shipping:</strong> <span id="shipping-cost">$0.00</span>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <strong>Total:</strong> <span id="total-amount" class="fw-bold">$0.00</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group mt-4">
+                            <button type="submit" class="btn btn-success">Create Purchase Order</button>
+                            <a asp-action="Index" class="btn btn-secondary">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        let itemIndex = @Model.Items.Count;
+
+        // Add new item row
+        document.getElementById('add-item').addEventListener('click', function() {
+            const container = document.getElementById('items-container');
+            const template = `
+                <div class="item-row border p-3 mb-3">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label class="form-label">Item *</label>
+                                <select name="Items[${itemIndex}].ItemId" class="form-select item-select" required>
+                                    <option value="">-- Select Item --</option>
+                                    @foreach (var item in Model.AvailableItems)
+                                    {
+                                            <option value="@item.Id">@item.Name</option>
+                                    }
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <div class="form-group">
+                                <label class="form-label">Quantity *</label>
+                                <input name="Items[${itemIndex}].Quantity" class="form-control quantity" type="number" min="1" value="1" required />
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <div class="form-group">
+                                <label class="form-label">Unit Price *</label>
+                                <input name="Items[${itemIndex}].UnitPrice" class="form-control unit-price" type="number" step="0.01" min="0" required />
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <div class="form-group">
+                                <label class="form-label">Discount %</label>
+                                <input name="Items[${itemIndex}].DiscountPercent" class="form-control discount" type="number" step="0.01" min="0" max="100" value="0" />
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <div class="form-group">
+                                <label class="form-label">&nbsp;</label>
+                                <button type="button" class="btn btn-danger btn-sm remove-item" style="display: block;">Remove</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            container.insertAdjacentHTML('beforeend', template);
+            itemIndex++;
+            attachEventListeners();
+        });
+
+        // Remove item row
+        function attachEventListeners() {
+            document.querySelectorAll('.remove-item').forEach(button => {
+                button.addEventListener('click', function() {
+                    this.closest('.item-row').remove();
+                    calculateTotals();
+                });
+            });
+
+            // Recalculate totals when inputs change
+            document.querySelectorAll('.quantity, .unit-price, .discount').forEach(input => {
+                input.addEventListener('input', calculateTotals);
+            });
+        }
+
+        // Calculate order totals
+        function calculateTotals() {
+            let subtotal = 0;
+
+            document.querySelectorAll('.item-row').forEach(row => {
+                const quantity = parseFloat(row.querySelector('.quantity').value) || 0;
+                const unitPrice = parseFloat(row.querySelector('.unit-price').value) || 0;
+                const discount = parseFloat(row.querySelector('.discount').value) || 0;
+
+                const lineTotal = quantity * unitPrice * (1 - discount / 100);
+                subtotal += lineTotal;
+            });
+
+            const taxPercent = parseFloat(document.querySelector('[name="TaxPercent"]').value) || 0;
+            const shippingCost = parseFloat(document.querySelector('[name="ShippingCost"]').value) || 0;
+            const taxAmount = subtotal * (taxPercent / 100);
+            const totalAmount = subtotal + taxAmount + shippingCost;
+
+            document.getElementById('subtotal').textContent = '$' + subtotal.toFixed(2);
+            document.getElementById('tax-amount').textContent = '$' + taxAmount.toFixed(2);
+            document.getElementById('shipping-cost').textContent = '$' + shippingCost.toFixed(2);
+            document.getElementById('total-amount').textContent = '$' + totalAmount.toFixed(2);
+        }
+
+        // Initial setup
+        attachEventListeners();
+        calculateTotals();
+
+        // Recalculate when tax or shipping changes
+        document.querySelector('[name="TaxPercent"]').addEventListener('input', calculateTotals);
+        document.querySelector('[name="ShippingCost"]').addEventListener('input', calculateTotals);
+    </script>
+}

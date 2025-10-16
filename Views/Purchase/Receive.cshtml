@@ -1,0 +1,169 @@
+﻿@model MyStudio.Models.Purchase
+@{
+    ViewData["Title"] = "Receive Purchase Items";
+}
+
+<div class="container">
+    <div class="row mb-4">
+        <div class="col">
+            <h1>Receive Purchase Items</h1>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a asp-action="Index">Purchases</a></li>
+                    <li class="breadcrumb-item"><a asp-action="Details" asp-route-id="@Model.Id">@Model.PurchaseNumber</a></li>
+                    <li class="breadcrumb-item active">Receive Items</li>
+                </ol>
+            </nav>
+        </div>
+        <div class="col-auto">
+            <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-outline-secondary">Back to Details</a>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0">Receive Items for @Model.PurchaseNumber</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Item</th>
+                            <th>Ordered Qty</th>
+                            <th>Already Received</th>
+                            <th>Receive Qty</th>
+                            <th>Actual Unit Price</th>
+                            <th>Batch Number</th>
+                            <th>Expiry Date</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model.PurchaseItems)
+                        {
+                            <tr>
+                                <td>
+                                    <strong>@item.Item.Name</strong><br />
+                                    <small class="text-muted">SKU: @item.Item.SKU</small>
+                                </td>
+                                <td>@item.Quantity</td>
+                                <td>@(item.QuantityReceived ?? 0)</td>
+                                <td>
+                                    <input type="number" id="quantity-@item.Id"
+                                           class="form-control form-control-sm"
+                                           min="0" max="@(item.Quantity - (item.QuantityReceived ?? 0))"
+                                           value="0" style="width: 80px;" />
+                                </td>
+                                <td>
+                                    <input type="number" id="price-@item.Id"
+                                           class="form-control form-control-sm"
+                                           step="0.01" min="0" value="@item.UnitPrice"
+                                           style="width: 100px;" />
+                                </td>
+                                <td>
+                                    <input type="text" id="batch-@item.Id"
+                                           class="form-control form-control-sm"
+                                           placeholder="Batch #" style="width: 120px;" />
+                                </td>
+                                <td>
+                                    <input type="date" id="expiry-@item.Id"
+                                           class="form-control form-control-sm"
+                                           style="width: 140px;" />
+                                </td>
+                                <td>
+                                    <button type="button" class="btn btn-success btn-sm receive-item"
+                                            data-item-id="@item.Id">
+                                        Receive
+                                    </button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="alert alert-info mt-3">
+                <h6>📝 Receiving Instructions</h6>
+                <ul class="mb-0">
+                    <li>Enter the quantity you're actually receiving (may differ from ordered quantity)</li>
+                    <li>Update the actual unit price if it differs from the purchase order</li>
+                    <li>Add batch numbers and expiry dates for better inventory tracking</li>
+                    <li>Click "Receive" for each item individually</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.querySelectorAll('.receive-item').forEach(button => {
+            button.addEventListener('click', function() {
+                const itemId = this.getAttribute('data-item-id');
+                const quantity = document.getElementById('quantity-' + itemId).value;
+                const price = document.getElementById('price-' + itemId).value;
+                const batch = document.getElementById('batch-' + itemId).value;
+                const expiry = document.getElementById('expiry-' + itemId).value;
+
+                if (quantity <= 0) {
+                    alert('Please enter a valid quantity to receive.');
+                    return;
+                }
+
+                // Show loading state
+                this.innerHTML = '<span class="spinner-border spinner-border-sm" role="status"></span> Receiving...';
+                this.disabled = true;
+
+                // Send AJAX request
+                fetch('@Url.Action("ReceiveItem", "Purchase")', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                    },
+                    body: JSON.stringify({
+                        purchaseItemId: parseInt(itemId),
+                        quantityReceived: parseInt(quantity),
+                        actualUnitPrice: parseFloat(price),
+                        batchNumber: batch,
+                        expiryDate: expiry || null
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Show success message
+                        const alert = document.createElement('div');
+                        alert.className = 'alert alert-success alert-dismissible fade show mt-3';
+                        alert.innerHTML = `
+                            ${data.message}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        `;
+                        document.querySelector('.card-body').prepend(alert);
+
+                        // Reset button
+                        this.innerHTML = 'Received ✓';
+                        this.className = 'btn btn-outline-success btn-sm';
+
+                        // Disable inputs for this row
+                        document.getElementById('quantity-' + itemId).disabled = true;
+                        document.getElementById('price-' + itemId).disabled = true;
+                        document.getElementById('batch-' + itemId).disabled = true;
+                        document.getElementById('expiry-' + itemId).disabled = true;
+                    } else {
+                        alert('Error: ' + data.message);
+                        this.innerHTML = 'Receive';
+                        this.disabled = false;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('An error occurred while receiving the item.');
+                    this.innerHTML = 'Receive';
+                    this.disabled = false;
+                });
+            });
+        });
+    </script>
+}

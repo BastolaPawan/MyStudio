@@ -1,0 +1,144 @@
+﻿@model MyStudio.Models.CreateItemViewModel
+@{
+    ViewData["Title"] = "Add New Item";
+}
+
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="mb-0">Add New Inventory Item</h4>
+                </div>
+                <div class="card-body">
+                    <form asp-action="CreateItem" method="post">
+                        @Html.AntiForgeryToken()
+
+                        <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+
+                        <!-- Basic Information -->
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label asp-for="SKU" class="form-label">SKU *</label>
+                                    <input asp-for="SKU" class="form-control" placeholder="e.g., CAM-DSLR-001" />
+                                    <span asp-validation-for="SKU" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label asp-for="Name" class="form-label">Item Name *</label>
+                                    <input asp-for="Name" class="form-control" placeholder="e.g., Professional DSLR Camera" />
+                                    <span asp-validation-for="Name" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label asp-for="Brand" class="form-label">Brand</label>
+                                    <input asp-for="Brand" class="form-control" placeholder="e.g., Canon, Sony" />
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label asp-for="Model" class="form-label">Model</label>
+                                    <input asp-for="Model" class="form-control" placeholder="e.g., EOS 5D Mark IV" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label asp-for="Description" class="form-label">Description</label>
+                            <textarea asp-for="Description" class="form-control" rows="3" placeholder="Item description..."></textarea>
+                        </div>
+
+                        <!-- Category Selection -->
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="form-group mb-3">
+                                    <label asp-for="UnitId" class="form-label">Unit *</label>
+                                    <select asp-for="UnitId" class="form-select" asp-items="@(new SelectList(Model.Units, "Id", "Name"))">
+                                        <option value="">-- Select Unit --</option>
+                                    </select>
+                                    <span asp-validation-for="UnitId" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group mb-3">
+                                    <label asp-for="ItemGroupId" class="form-label">Item Group *</label>
+                                    <select asp-for="ItemGroupId" class="form-select" id="ItemGroupId"
+                                            asp-items="@(new SelectList(Model.ItemGroups, "Id", "Name"))">
+                                        <option value="">-- Select Group --</option>
+                                    </select>
+                                    <span asp-validation-for="ItemGroupId" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group mb-3">
+                                    <label asp-for="ItemSubGroupId" class="form-label">Sub Group</label>
+                                    <select asp-for="ItemSubGroupId" class="form-select" id="ItemSubGroupId">
+                                        <option value="">-- Select Sub Group --</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Stock Levels -->
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="form-group mb-3">
+                                    <label asp-for="MinimumStock" class="form-label">Minimum Stock</label>
+                                    <input asp-for="MinimumStock" class="form-control" type="number" step="0.01" value="0" />
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group mb-3">
+                                    <label asp-for="MaximumStock" class="form-label">Maximum Stock</label>
+                                    <input asp-for="MaximumStock" class="form-control" type="number" step="0.01" value="0" />
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group mb-3">
+                                    <label asp-for="ReorderLevel" class="form-label">Reorder Level</label>
+                                    <input asp-for="ReorderLevel" class="form-control" type="number" step="0.01" value="0" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group mt-4">
+                            <button type="submit" class="btn btn-success">Create Item</button>
+                            <a asp-action="Items" class="btn btn-secondary">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Load sub-groups based on selected group
+        document.getElementById('ItemGroupId').addEventListener('change', function() {
+            const groupId = this.value;
+            const subGroupSelect = document.getElementById('ItemSubGroupId');
+
+            // Clear existing options
+            subGroupSelect.innerHTML = '<option value="">-- Select Sub Group --</option>';
+
+            if (groupId) {
+                // In a real application, you'd fetch sub-groups via AJAX
+                // For now, we'll use a simple client-side filter if data is available
+                const subGroups = @Html.Raw(Json.Serialize(Model.ItemSubGroups));
+                const filteredSubGroups = subGroups.filter(sg => sg.itemGroupId == groupId);
+
+                filteredSubGroups.forEach(sg => {
+                    const option = new Option(sg.name, sg.id);
+                    subGroupSelect.add(option);
+                });
+            }
+        });
+    </script>
+}
