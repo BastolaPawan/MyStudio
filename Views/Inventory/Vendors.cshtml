@@ -1,0 +1,171 @@
+﻿@model List<MyStudio.Models.Vendor>
+@{
+    ViewData["Title"] = "Vendors";
+}
+
+<div class="container">
+    <div class="row mb-4">
+        <div class="col">
+            <h1>Vendors</h1>
+            <p class="lead">Manage your suppliers and vendors</p>
+        </div>
+        <div class="col-auto">
+            <a asp-action="CreateVendor" class="btn btn-success">Add New Vendor</a>
+            <a asp-action="ImportVendors" class="btn btn-outline-primary">Import from Excel</a>
+            <a asp-action="Index" class="btn btn-outline-secondary">Inventory Dashboard</a>
+        </div>
+    </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            @TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <div class="card">
+        <div class="card-body">
+            @if (Model.Any())
+            {
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Vendor Name</th>
+                                <th>Contact Person</th>
+                                <th>Email</th>
+                                <th>Phone</th>
+                                <th>Total Purchases</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var vendor in Model)
+                            {
+                                <tr>
+                                    <td>
+                                        <strong>@vendor.Name</strong>
+                                        @if (!string.IsNullOrEmpty(vendor.TaxNumber))
+                                        {
+                                            <br />
+                                
+                                            <small class="text-muted">Tax: @vendor.TaxNumber</small>
+                                        }
+                                    </td>
+                                    <td>@vendor.ContactPerson</td>
+                                    <td>
+                                        @if (!string.IsNullOrEmpty(vendor.Email))
+                                        {
+                                            <a href="mailto:@vendor.Email">@vendor.Email</a>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">N/A</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        @if (!string.IsNullOrEmpty(vendor.Phone))
+                                        {
+                                            <a href="tel:@vendor.Phone">@vendor.Phone</a>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">N/A</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        @{
+                                            var purchaseCount = vendor.Purchases?.Count ?? 0;
+                                        }
+                                        <span class="badge bg-info">@purchaseCount purchases</span>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-@(vendor.IsActive ? "success" : "secondary")">
+                                            @(vendor.IsActive ? "Active" : "Inactive")
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            <a asp-action="EditVendor" asp-route-id="@vendor.Id"
+                                               class="btn btn-outline-primary">Edit</a>
+
+                                            <button type="button" class="btn btn-outline-@(vendor.IsActive ? "warning" : "success") toggle-status"
+                                                    data-vendor-id="@vendor.Id" data-vendor-name="@vendor.Name">
+                                                @(vendor.IsActive ? "Deactivate" : "Activate")
+                                            </button>
+
+                                            <form asp-action="DeleteVendor" asp-route-id="@vendor.Id" method="post"
+                                                  class="d-inline" onsubmit="return confirm('Are you sure you want to delete this vendor?');">
+                                                @Html.AntiForgeryToken()
+                                                <button type="submit" class="btn btn-outline-danger">Delete</button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <div class="text-center py-4">
+                    <h4 class="text-muted">No vendors found</h4>
+                    <p class="text-muted">Add your first vendor to start creating purchase orders.</p>
+                    <a asp-action="CreateVendor" class="btn btn-primary">Add Your First Vendor</a>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.querySelectorAll('.toggle-status').forEach(button => {
+            button.addEventListener('click', function() {
+                const vendorId = this.getAttribute('data-vendor-id');
+                const vendorName = this.getAttribute('data-vendor-name');
+
+                if (confirm(`Are you sure you want to toggle the status for ${vendorName}?`)) {
+                    // Show loading state
+                    this.innerHTML = '<span class="spinner-border spinner-border-sm" role="status"></span>';
+                    this.disabled = true;
+
+                    fetch('@Url.Action("ToggleVendorStatus", "Inventory")/' + vendorId, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                        }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            // Reload page to see changes
+                            location.reload();
+                        } else {
+                            alert('Error: ' + data.message);
+                            this.innerHTML = data.isActive ? 'Deactivate' : 'Activate';
+                            this.disabled = false;
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('An error occurred while updating vendor status.');
+                        this.innerHTML = 'Toggle';
+                        this.disabled = false;
+                    });
+                }
+            });
+        });
+    </script>
+}

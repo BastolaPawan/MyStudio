@@ -1,0 +1,177 @@
+﻿@model MyStudio.Models.ImportVendorsViewModel
+@{
+    ViewData["Title"] = "Import Vendors from Excel";
+}
+
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="mb-0">Import Vendors from Excel</h4>
+                </div>
+                <div class="card-body">
+                    <!-- Instructions -->
+                    <div class="alert alert-info">
+                        <h6>📋 Import Instructions</h6>
+                        <ul class="mb-0">
+                            <li>Download the template file to ensure proper formatting</li>
+                            <li>Required column: <strong>Name</strong></li>
+                            <li>Optional columns: ContactPerson, Email, Phone, Address, TaxNumber, PaymentTerms</li>
+                            <li>File formats supported: .xlsx, .xls</li>
+                            <li>Maximum file size: 5MB</li>
+                        </ul>
+                    </div>
+
+                    <form asp-action="ImportVendors" method="post" enctype="multipart/form-data">
+                        @Html.AntiForgeryToken()
+
+                        <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+
+                        <!-- File Upload -->
+                        <div class="form-group mb-4">
+                            <label asp-for="ExcelFile" class="form-label">Excel File *</label>
+                            <input asp-for="ExcelFile" class="form-control" type="file" accept=".xlsx,.xls" />
+                            <span asp-validation-for="ExcelFile" class="text-danger"></span>
+                            <small class="form-text text-muted">
+                                Select the Excel file containing vendor data
+                            </small>
+                        </div>
+
+                        <!-- Import Options -->
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <h6 class="mb-0">Import Options</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="form-check mb-2">
+                                    <input asp-for="UpdateExisting" class="form-check-input" />
+                                    <label asp-for="UpdateExisting" class="form-check-label">
+                                        Update existing vendors
+                                    </label>
+                                    <small class="form-text text-muted d-block">
+                                        If checked, existing vendors with matching names will be updated. Otherwise, they will be skipped.
+                                    </small>
+                                </div>
+
+                                <div class="form-check">
+                                    <input asp-for="SkipErrors" class="form-check-input" />
+                                    <label asp-for="SkipErrors" class="form-check-label">
+                                        Skip rows with errors
+                                    </label>
+                                    <small class="form-text text-muted d-block">
+                                        If checked, rows with validation errors will be skipped. Otherwise, the import will stop on first error.
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="form-group mt-4">
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-upload"></i> Import Vendors
+                            </button>
+                            <a asp-action="DownloadVendorTemplate" class="btn btn-outline-primary">
+                                <i class="fas fa-download"></i> Download Template
+                            </a>
+                            <a asp-action="Vendors" class="btn btn-secondary">Cancel</a>
+                        </div>
+                    </form>
+                    <!-- Download Links Section -->
+                    <div class="card mt-4">
+                        <div class="card-header">
+                            <h6 class="mb-0">Download Templates</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="d-grid gap-2">
+                                        <a asp-action="DownloadVendorTemplate" class="btn btn-outline-primary">
+                                            <i class="fas fa-download"></i> Download Full Template (With Sample Data)
+                                        </a>
+                                        <small class="text-muted text-center">
+                                            Includes sample vendor data for reference
+                                        </small>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="d-grid gap-2">
+                                        <a asp-action="DownloadBlankTemplate" class="btn btn-outline-success">
+                                            <i class="fas fa-file-excel"></i> Download Blank Template (Headings Only)
+                                        </a>
+                                        <small class="text-muted text-center">
+                                            Just column headings for quick data entry
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sample Data Preview -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h6 class="mb-0">Sample Data Format</h6>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-sm">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Name</th>
+                                    <th>ContactPerson</th>
+                                    <th>Email</th>
+                                    <th>Phone</th>
+                                    <th>Address</th>
+                                    <th>TaxNumber</th>
+                                    <th>PaymentTerms</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Camera World Ltd.</td>
+                                    <td>John Smith</td>
+                                    <td>john@cameraworld.com</td>
+                                    <td>+1-555-0101</td>
+                                    <td>123 Camera Street</td>
+                                    <td>TXN-001</td>
+                                    <td>Net 30</td>
+                                </tr>
+                                <tr>
+                                    <td>Lighting Solutions</td>
+                                    <td>Sarah Johnson</td>
+                                    <td>sarah@lighting.com</td>
+                                    <td>+1-555-0102</td>
+                                    <td>456 Light Avenue</td>
+                                    <td>TXN-002</td>
+                                    <td>50% Advance</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+
+    <script>
+        // File size validation
+        document.querySelector('input[type="file"]').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            const maxSize = 5 * 1024 * 1024; // 5MB
+
+            if (file && file.size > maxSize) {
+                alert('File size must be less than 5MB');
+                this.value = '';
+            }
+        });
+    </script>
+}

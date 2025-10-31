@@ -1,0 +1,158 @@
+﻿@model MyStudio.Models.ImportResultViewModel
+@{
+    ViewData["Title"] = "Import Results";
+}
+
+<div class="container">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="mb-0">Vendor Import Results</h4>
+                </div>
+                <div class="card-body">
+                    <!-- Summary Cards -->
+                    <div class="row mb-4">
+                        <div class="col-md-3">
+                            <div class="card text-white bg-primary">
+                                <div class="card-body text-center">
+                                    <h5 class="card-title">Total Rows</h5>
+                                    <h2 class="card-text">@Model.TotalRows</h2>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card text-white bg-success">
+                                <div class="card-body text-center">
+                                    <h5 class="card-title">Imported</h5>
+                                    <h2 class="card-text">@Model.SuccessCount</h2>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card text-white bg-info">
+                                <div class="card-body text-center">
+                                    <h5 class="card-title">Updated</h5>
+                                    <h2 class="card-text">@Model.UpdatedCount</h2>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card text-white bg-danger">
+                                <div class="card-body text-center">
+                                    <h5 class="card-title">Errors</h5>
+                                    <h2 class="card-text">@Model.ErrorCount</h2>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Success Message -->
+                    @if (Model.SuccessCount > 0 || Model.UpdatedCount > 0)
+                    {
+                        <div class="alert alert-success">
+                            <h6>✅ Import Completed Successfully!</h6>
+                            <p class="mb-0">
+                                Successfully processed @(Model.SuccessCount + Model.UpdatedCount) out of @Model.TotalRows vendors.
+                                @if (Model.SuccessCount > 0)
+                                {
+                                    <br />
+                                    <strong>@Model.SuccessCount new vendors</strong>
+                                    <span>were added.</span>
+
+                                }
+                                @if (Model.UpdatedCount > 0)
+                                {
+                                    <br />
+                                    <strong>@Model.UpdatedCount existing vendors</strong>
+                                    <span>were updated.</span>
+                                }
+                            </p>
+                        </div>
+                    }
+
+                    <!-- Error List -->
+                    @if (Model.Errors.Any())
+                    {
+                        <div class="alert alert-warning">
+                            <h6>⚠️ Import Warnings</h6>
+                            <p>The following @Model.ErrorCount rows had errors and were skipped:</p>
+
+                            <div class="table-responsive">
+                                <table class="table table-sm table-bordered">
+                                    <thead>
+                                        <tr>
+                                            <th>Row #</th>
+                                            <th>Vendor Name</th>
+                                            <th>Error Message</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var error in Model.Errors)
+                                        {
+                                            <tr>
+                                                <td>@error.RowNumber</td>
+                                                <td>@error.VendorName</td>
+                                                <td class="text-danger">@error.ErrorMessage</td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    }
+
+                    <!-- Imported Vendors Preview -->
+                    @if (Model.ImportedVendors.Any())
+                    {
+                        <div class="card">
+                            <div class="card-header">
+                                <h6 class="mb-0">Imported Vendors Preview</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table table-striped table-sm">
+                                        <thead>
+                                            <tr>
+                                                <th>Vendor Name</th>
+                                                <th>Contact Person</th>
+                                                <th>Email</th>
+                                                <th>Phone</th>
+                                                <th>Status</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach (var vendor in Model.ImportedVendors.Take(10))
+                                            {
+                                                <tr>
+                                                    <td>@vendor.Name</td>
+                                                    <td>@vendor.ContactPerson</td>
+                                                    <td>@vendor.Email</td>
+                                                    <td>@vendor.Phone</td>
+                                                    <td>
+                                                        <span class="badge bg-success">Imported</span>
+                                                    </td>
+                                                </tr>
+                                            }
+                                        </tbody>
+                                    </table>
+                                </div>
+                                @if (Model.ImportedVendors.Count > 10)
+                                {
+                                    <p class="text-muted">Showing first 10 of @Model.ImportedVendors.Count imported vendors</p>
+                                }
+                            </div>
+                        </div>
+                    }
+
+                    <!-- Action Buttons -->
+                    <div class="mt-4">
+                        <a asp-action="Vendors" class="btn btn-primary">View All Vendors</a>
+                        <a asp-action="ImportVendors" class="btn btn-outline-secondary">Import More Vendors</a>
+                        <a asp-action="DownloadVendorTemplate" class="btn btn-outline-info">Download Template</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
