@@ -490,3 +490,4 @@ obj/Debug/net8.0/
 .vs/
 
 **/obj/
+/appsettings.json
