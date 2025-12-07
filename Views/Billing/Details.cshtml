@@ -1,0 +1,335 @@
+﻿@model MyStudio.Models.Order
+@{
+    ViewData["Title"] = $"Order Details - {Model.OrderNumber}";
+}
+
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Order Details</h1>
+        <div>
+            <a asp-action="Index" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Back to Orders
+            </a>
+            @if (!Model.IsCancelled)
+            {
+                <a asp-action="AddPayment" asp-route-id="@Model.Id" class="btn btn-success">
+                    <i class="fas fa-money-bill-wave"></i> Add Payment
+                </a>
+            }
+        </div>
+    </div>
+
+    <!-- Order Header -->
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">Order #@Model.OrderNumber</h5>
+                    <div>
+                        <span class="badge bg-@GetStatusBadgeColor(Model.Status) me-1">@Model.Status</span>
+                        <span class="badge bg-@GetPaymentStatusBadgeColor(Model.PaymentStatus)">@Model.PaymentStatus</span>
+                        @if (Model.IsCancelled)
+                        {
+                            <span class="badge bg-danger">Cancelled</span>
+                        }
+                        @if (Model.IsBadDebt)
+                        {
+                            <span class="badge bg-warning">Bad Debt</span>
+                        }
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <table class="table table-sm">
+                                <tr>
+                                    <th>Customer:</th>
+                                    <td>@Model.Customer?.Name</td>
+                                </tr>
+                                <tr>
+                                    <th>Order Date:</th>
+                                    <td>@Model.OrderDate.ToString("MMM dd, yyyy hh:mm tt")</td>
+                                </tr>
+                                <tr>
+                                    <th>Order Type:</th>
+                                    <td>@Model.OrderType</td>
+                                </tr>
+                                <tr>
+                                    <th>Session Type:</th>
+                                    <td>@Model.SessionType</td>
+                                </tr>
+                            </table>
+                        </div>
+                        <div class="col-md-6">
+                            <table class="table table-sm">
+                                <tr>
+                                    <th>Photo Shoot Date:</th>
+                                    <td>@(Model.PhotoShootDate?.ToString("MMM dd, yyyy hh:mm tt") ?? "Not set")</td>
+                                </tr>
+                                <tr>
+                                    <th>Expected Delivery:</th>
+                                    <td>@(Model.DeliveryDate?.ToString("MMM dd, yyyy") ?? "Not set")</td>
+                                </tr>
+                                <tr>
+                                    <th>Delivery Method:</th>
+                                    <td>@Model.DeliveryMethod</td>
+                                </tr>
+                                @if (!string.IsNullOrEmpty(Model.CourierName))
+                                {
+                                    <tr>
+                                        <th>Courier:</th>
+                                        <td>@Model.CourierName</td>
+                                    </tr>
+                                }
+                            </table>
+                        </div>
+                    </div>
+
+                    @if (!string.IsNullOrEmpty(Model.Notes))
+                    {
+                        <div class="mt-3">
+                            <strong>Notes:</strong>
+                            <p class="mb-0">@Model.Notes</p>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <!-- Order Items -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Order Items</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Item Type</th>
+                                    <th>Description</th>
+                                    <th>Qty</th>
+                                    <th>Unit Price</th>
+                                    <th>Discount %</th>
+                                    <th>Line Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var item in Model.OrderItems)
+                                {
+                                    <tr>
+                                        <td>@item.ItemType</td>
+                                        <td>@item.Description</td>
+                                        <td>@item.Quantity</td>
+                                        <td>@item.UnitPrice.ToString("C")</td>
+                                        <td>@item.DiscountPercent.ToString("F2")%</td>
+                                        <td>@item.LineTotal.ToString("C")</td>
+                                    </tr>
+                                }
+                            </tbody>
+                            <tfoot>
+                                <tr>
+                                    <td colspan="5" class="text-end"><strong>Subtotal:</strong></td>
+                                    <td><strong>@Model.SubTotal.ToString("C")</strong></td>
+                                </tr>
+                                <tr>
+                                    <td colspan="5" class="text-end"><strong>Discount:</strong></td>
+                                    <td><strong>-@Model.DiscountAmount.ToString("C")</strong></td>
+                                </tr>
+                                <tr>
+                                    <td colspan="5" class="text-end"><strong>Tax (13%):</strong></td>
+                                    <td><strong>@Model.TaxAmount.ToString("C")</strong></td>
+                                </tr>
+                                <tr>
+                                    <td colspan="5" class="text-end"><strong>Shipping:</strong></td>
+                                    <td><strong>@Model.ShippingCharge.ToString("C")</strong></td>
+                                </tr>
+                                <tr class="table-primary">
+                                    <td colspan="5" class="text-end"><strong>Total Amount:</strong></td>
+                                    <td><strong>@Model.TotalAmount.ToString("C")</strong></td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Payment & Actions -->
+        <div class="col-md-4">
+            <!-- Payment Summary -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Payment Summary</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table table-sm">
+                        <tr>
+                            <th>Total Amount:</th>
+                            <td>@Model.TotalAmount.ToString("C")</td>
+                        </tr>
+                        <tr>
+                            <th>Advance Paid:</th>
+                            <td>@Model.AdvancePaid.ToString("C")</td>
+                        </tr>
+                        <tr>
+                            <th>Additional Payments:</th>
+                            <td>@(Model.Payments?.Sum(p => p.Amount).ToString("C") ?? "$0.00")</td>
+                        </tr>
+                        <tr class="table-@(Model.BalanceAmount > 0 ? "warning" : "success")">
+                            <th>Balance Due:</th>
+                            <td><strong>@Model.BalanceAmount.ToString("C")</strong></td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Payment History -->
+            @if (Model.Payments != null && Model.Payments.Any())
+            {
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">Payment History</h5>
+                    </div>
+                    <div class="card-body">
+                        @foreach (var payment in Model.Payments?.OrderByDescending(p => p.PaymentDate) ?? Enumerable.Empty<Payment>())
+                        {
+                            <div class="border-bottom pb-2 mb-2">
+                                <div class="d-flex justify-content-between">
+                                    <strong>@payment.PaymentNumber</strong>
+                                    <span class="text-success">@payment.Amount.ToString("C")</span>
+                                </div>
+                                <small class="text-muted">
+                                    @payment.PaymentDate.ToString("MMM dd, yyyy") - @payment.PaymentMethod
+                                    @if (!string.IsNullOrEmpty(payment.ReferenceNumber))
+                                    {
+                                        <text><br />Ref: @payment.ReferenceNumber</text>
+                                    }
+                                </small>
+                                @if (!string.IsNullOrEmpty(payment.Notes))
+                                {
+                                    <div><small>@payment.Notes</small></div>
+                                }
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+
+            <!-- Order Actions -->
+            @if (!Model.IsCancelled)
+            {
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">Order Actions</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-grid gap-2">
+                            @if (Model.Status != "Ready" && Model.Status != "Delivered")
+                            {
+                                <button type="button" class="btn btn-warning update-status" data-status="Ready">
+                                    <i class="fas fa-check"></i> Mark as Ready
+                                </button>
+                            }
+                            @if (Model.Status == "Ready" && Model.PaymentStatus == "Paid")
+                            {
+                                <button type="button" class="btn btn-success update-status" data-status="Delivered">
+                                    <i class="fas fa-truck"></i> Mark as Delivered
+                                </button>
+                            }
+                            @if (Model.Status != "Delivered" && Model.Status != "Cancelled")
+                            {
+                                <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#cancelModal">
+                                    <i class="fas fa-times"></i> Cancel Order
+                                </button>
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<!-- Cancel Order Modal -->
+@if (!Model.IsCancelled)
+{
+    <div class="modal fade" id="cancelModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Cancel Order #@Model.OrderNumber</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form asp-action="CancelOrder" method="post">
+                    <input type="hidden" name="id" value="@Model.Id" />
+                    <div class="modal-body">
+                        <div class="form-group mb-3">
+                            <label class="form-label">Cancellation Reason *</label>
+                            <textarea name="reason" class="form-control" rows="3" required placeholder="Why is this order being cancelled?"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Cancellation Charge</label>
+                            <input type="number" name="cancellationCharge" step="0.01" class="form-control" value="0" />
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-danger">Confirm Cancellation</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+}
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            $('.update-status').click(function () {
+                var status = $(this).data('status');
+                var url = status === 'Ready' ? '@Url.Action("MarkAsReady", "Billing")' : '@Url.Action("MarkAsDelivered", "Billing")';
+
+                if (confirm('Are you sure you want to mark this order as ' + status + '?')) {
+                    $.post(url, { id: '@Model.Id' })
+                        .done(function (response) {
+                            if (response.success) {
+                                location.reload();
+                            } else {
+                                alert('Error: ' + response.message);
+                            }
+                        })
+                        .fail(function () {
+                            alert('Error updating order status');
+                        });
+                }
+            });
+        });
+    </script>
+}
+
+@functions {
+    public string GetStatusBadgeColor(string status)
+    {
+        return status switch
+        {
+            "Draft" => "secondary",
+            "Confirmed" => "primary",
+            "InProgress" => "info",
+            "Ready" => "warning",
+            "Delivered" => "success",
+            "Cancelled" => "danger",
+            _ => "secondary"
+        };
+    }
+
+    public string GetPaymentStatusBadgeColor(string paymentStatus)
+    {
+        return paymentStatus switch
+        {
+            "Pending" => "warning",
+            "Partial" => "info",
+            "Paid" => "success",
+            _ => "secondary"
+        };
+    }
+}

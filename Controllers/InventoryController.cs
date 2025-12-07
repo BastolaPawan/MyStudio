@@ -19,7 +19,10 @@ namespace MyStudio.Controllers
             _context = context;
             _logger = logger;
         }
-
+        //public InventoryController()
+        //{
+            
+        //}
         // GET: /Inventory
         public IActionResult Index()
         {

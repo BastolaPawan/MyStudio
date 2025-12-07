@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using MyStudio.Models;
 using MyStudio.Models.DatabaseContext;
+using MyStudio.Models.DTOs;
 
 namespace MyStudio.Controllers
 {
@@ -165,20 +166,21 @@ namespace MyStudio.Controllers
         }
 
         // POST: /Purchase/ReceiveItem
+        [ValidateAntiForgeryToken]
         [HttpPost]
-        public async Task<IActionResult> ReceiveItem(int purchaseItemId, int quantityReceived, decimal actualUnitPrice)
+        public async Task<IActionResult> ReceiveItem([FromBody] ReceiveItemDto itemDetails)
         {
             var purchaseItem = await _context.PurchaseItems
                 .Include(pi => pi.Purchase)
                 .Include(pi => pi.Item)
-                .FirstOrDefaultAsync(pi => pi.Id == purchaseItemId);
+                .FirstOrDefaultAsync(pi => pi.Id == itemDetails.PurchaseItemId);
 
             if (purchaseItem == null)
             {
                 return Json(new { success = false, message = "Purchase item not found" });
             }
 
-            if (quantityReceived > purchaseItem.Quantity)
+            if (itemDetails.QuantityReceived > purchaseItem.Quantity)
             {
                 return Json(new { success = false, message = "Quantity received cannot exceed ordered quantity" });
             }
@@ -188,8 +190,8 @@ namespace MyStudio.Controllers
             try
             {
                 // Update purchase item
-                purchaseItem.QuantityReceived = quantityReceived;
-                purchaseItem.ActualUnitPrice = actualUnitPrice;
+                purchaseItem.QuantityReceived = itemDetails.QuantityReceived;
+                purchaseItem.ActualUnitPrice = itemDetails.ActualUnitPrice;
 
                 // Create stock movement
                 var stockMovement = new StockMovement
@@ -197,8 +199,8 @@ namespace MyStudio.Controllers
                     ItemId = purchaseItem.ItemId,
                     MovementDate = DateTime.Now,
                     MovementType = "Purchase",
-                    Quantity = quantityReceived,
-                    UnitCost = actualUnitPrice,
+                    Quantity = itemDetails.QuantityReceived,
+                    UnitCost = itemDetails.ActualUnitPrice,
                     Reference = purchaseItem.Purchase.PurchaseNumber,
                     Notes = $"Purchase receipt - {purchaseItem.Purchase.PurchaseNumber}",
                     CreatedDate = DateTime.Now

@@ -27,6 +27,11 @@ namespace MyStudio.Models.DatabaseContext
         public DbSet<PurchaseItem> PurchaseItems { get; set; }
         public DbSet<StockMovement> StockMovements { get; set; }
 
+        public DbSet<Order> Orders { get; set; }
+        public DbSet<Payment> Payments { get; set; }
+        public DbSet<Customer> Customers { get; set; }
+        public DbSet<ProductService> ProductServices { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);

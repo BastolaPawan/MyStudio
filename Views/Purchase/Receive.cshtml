@@ -2,7 +2,7 @@
 @{
     ViewData["Title"] = "Receive Purchase Items";
 }
-
+@Html.AntiForgeryToken();
 <div class="container">
     <div class="row mb-4">
         <div class="col">
@@ -103,9 +103,9 @@
                 const itemId = this.getAttribute('data-item-id');
                 const quantity = document.getElementById('quantity-' + itemId).value;
                 const price = document.getElementById('price-' + itemId).value;
-                const batch = document.getElementById('batch-' + itemId).value;
-                const expiry = document.getElementById('expiry-' + itemId).value;
-
+                // const batch = document.getElementById('batch-' + itemId).value;
+                // const expiry = document.getElementById('expiry-' + itemId).value;
+                debugger;
                 if (quantity <= 0) {
                     alert('Please enter a valid quantity to receive.');
                     return;
@@ -123,11 +123,12 @@
                         'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
                     },
                     body: JSON.stringify({
-                        purchaseItemId: parseInt(itemId),
-                        quantityReceived: parseInt(quantity),
-                        actualUnitPrice: parseFloat(price),
-                        batchNumber: batch,
-                        expiryDate: expiry || null
+                        PurchaseItemId: parseInt(itemId),
+                        QuantityReceived: parseInt(quantity),
+                        ActualUnitPrice: parseFloat(price)
+                        //,
+                        // batchNumber: batch,
+                        // expiryDate: expiry || null
                     })
                 })
                 .then(response => response.json())

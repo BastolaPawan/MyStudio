@@ -1,0 +1,83 @@
+﻿@model MyStudio.Models.PaymentViewModel
+@{
+    ViewData["Title"] = "Add Payment";
+    var order = ViewBag.Order as MyStudio.Models.Order;
+}
+
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Add Payment for Order #@(order?.OrderNumber ?? "N/A")</h5>
+                </div>
+                <div class="card-body">
+                    <!-- Order Summary -->
+                    <div class="alert alert-info">
+                        <h6>Order Summary</h6>
+                        <p class="mb-1"><strong>Customer:</strong> @(order?.Customer?.Name ?? "N/A")</p>
+                        <p class="mb-1"><strong>Total Amount:</strong> @(order?.TotalAmount.ToString("C") ?? "$0.00")</p>
+                        <p class="mb-1"><strong>Advance Paid:</strong> @(order?.AdvancePaid.ToString("C") ?? "$0.00")</p>
+                        <p class="mb-1"><strong>Additional Payments:</strong> @(order?.Payments?.Sum(p => p.Amount).ToString("C") ?? "$0.00")</p>
+                        <p class="mb-0"><strong>Balance Due:</strong> <span class="text-danger">@(order?.BalanceAmount.ToString("C") ?? "$0.00")</span></p>
+                    </div>
+
+                    <form asp-action="AddPayment" method="post">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" asp-for="OrderId" />
+
+                        <div class="form-group mb-3">
+                            <label asp-for="PaymentDate" class="form-label">Payment Date *</label>
+                            <input asp-for="PaymentDate" type="datetime-local" class="form-control" required />
+                            <span asp-validation-for="PaymentDate" class="text-danger"></span>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label asp-for="Amount" class="form-label">Amount *</label>
+                            <input asp-for="Amount" type="number" step="0.01" class="form-control" required
+                                   max="@(order?.BalanceAmount??0)" />
+                            <small class="form-text text-muted">Maximum amount: @(order?.BalanceAmount.ToString("C")??"$0.00")</small>
+                            <span asp-validation-for="Amount" class="text-danger"></span>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label asp-for="PaymentMethod" class="form-label">Payment Method *</label>
+                            <select asp-for="PaymentMethod" class="form-control" required>
+                                <option value="">-- Select Payment Method --</option>
+                                <option value="Cash">Cash</option>
+                                <option value="Card">Credit/Debit Card</option>
+                                <option value="BankTransfer">Bank Transfer</option>
+                                <option value="Online">Online Payment</option>
+                                <option value="Check">Check</option>
+                            </select>
+                            <span asp-validation-for="PaymentMethod" class="text-danger"></span>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label asp-for="ReferenceNumber" class="form-label">Reference Number</label>
+                            <input asp-for="ReferenceNumber" class="form-control" placeholder="Transaction ID, Check #, etc." />
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label asp-for="Notes" class="form-label">Notes</label>
+                            <textarea asp-for="Notes" class="form-control" rows="3" placeholder="Any additional notes about this payment..."></textarea>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-money-bill-wave"></i> Record Payment
+                            </button>
+                            <a asp-action="Details" asp-route-id="@order?.Id" class="btn btn-secondary">
+                                <i class="fas fa-times"></i> Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
